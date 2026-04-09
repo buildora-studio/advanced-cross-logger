@@ -1,0 +1,9 @@
+[workspace]
+resolver = "3"
+members = [
+    "core",
+    "bindings/node",
+    "bindings/python",
+    "bindings/go/rust-go",
+    "bindings/java/rust-jni",
+]
