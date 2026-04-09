@@ -1,0 +1,12 @@
+[package]
+name = "cross_logger_java"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "cross_logger"
+crate-type = ["cdylib"]
+
+[dependencies]
+cross_logger_core = { package = "core", path = "../../../core" }
+jni = { version = "0.21", default-features = false }
