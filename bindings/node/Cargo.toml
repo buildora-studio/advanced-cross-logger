@@ -1,0 +1,15 @@
+[package]
+name = "cross_logger_node"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+cross_logger_core = { package = "core", path = "../../core" }
+napi = { version = "2.0", default-features = false, features = ["napi4"] }
+napi-derive = "2.12.2"
+
+[build-dependencies]
+napi-build = "2"
