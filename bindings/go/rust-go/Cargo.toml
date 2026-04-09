@@ -1,0 +1,11 @@
+[package]
+name = "cross_logger_go"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "cross_logger"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+cross_logger_core = { package = "core", path = "../../../core" }
