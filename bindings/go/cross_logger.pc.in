@@ -1,0 +1,7 @@
+libdir=@LIBDIR@
+
+Name: cross_logger
+Description: Cross-language logger native library
+Version: 0.1.0
+Libs: -L${libdir} -lcross_logger -ldl -lpthread
+Cflags:

@@ -24,7 +24,7 @@ logger.go                    CGo wrapper — declares C signatures and exposes G
 
 ```go
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../target/release -lcross_logger -ldl -lpthread
+#cgo pkg-config: cross_logger
 #include <stdlib.h>
 void log_info(const char* message);
 */
@@ -38,26 +38,22 @@ func LogInfo(message string) {
 }
 ```
 
-### Library path
+### Library resolution via pkg-config
 
-The `LDFLAGS` directive uses `${SRCDIR}` — CGo replaces this with the absolute path of the directory containing `logger.go` (`bindings/go/`). The static library lives two levels up in the Cargo workspace output directory:
+`logger.go` uses `#cgo pkg-config: cross_logger` instead of a hardcoded path. CGo calls `pkg-config --libs cross_logger` at build time to get the linker flags, which reads from a `cross_logger.pc` file on `PKG_CONFIG_PATH`.
 
-```
-${SRCDIR}/../../target/release  →  <repo>/target/release
-```
+- **Production**: install `cross_logger.pc` alongside the library into a standard system prefix (e.g. `/usr/local/lib/pkgconfig/`).
+- **Development**: `scripts/build/go.sh` generates `cross_logger.pc` from `cross_logger.pc.in` with the local `target/release` path and sets `PKG_CONFIG_PATH` automatically.
 
-The Rust static library must be built before any `go build` or `go run`.
+`cross_logger.pc` is generated — it is not committed to the repository.
 
 ## Building from source
 
 ```bash
-# 1. Build the Rust static library
-cargo build --release -p cross_logger_go
-
-# 2. Build the Go package
-cd bindings/go
-go build ./...
+bash scripts/build/go.sh
 ```
+
+This builds the Rust static library, generates `cross_logger.pc`, and runs `go build ./...` with `PKG_CONFIG_PATH` set to the local binding directory.
 
 ## API
 

@@ -1,7 +1,7 @@
 package crosslogger
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../target/release -lcross_logger -ldl -lpthread
+#cgo pkg-config: cross_logger
 #include <stdlib.h>
 
 void log_info(const char* message);

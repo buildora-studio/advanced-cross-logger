@@ -4,17 +4,17 @@ Demonstrates the basic usage of `cross-logger` from Go.
 
 ## Setup
 
-1. Build the Rust static library:
+1. Build the Rust static library and generate the local `pkg-config` file:
 
 ```bash
-cargo build --release -p cross_logger_go
+bash scripts/build/go.sh
 ```
 
-2. Run the example:
+2. Run the example with `PKG_CONFIG_PATH` pointing at the local `.pc` file:
 
 ```bash
 cd examples/go
-go run main.go
+PKG_CONFIG_PATH=../../bindings/go go run main.go
 ```
 
 Expected output:
