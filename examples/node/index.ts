@@ -1,5 +1,4 @@
-import pkg from '@cross-logger/node'
-const { logInfo, logWarning, logError } = pkg
+import { logInfo, logWarning, logError } from '@cross-logger/node'
 
 logInfo('Server started on port 3000')
 logWarning('Memory usage above 80%')

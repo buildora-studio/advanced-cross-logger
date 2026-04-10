@@ -1,11 +1,14 @@
 {
   "name": "cross-logger-node-example",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "tsx index.ts"
   },
   "dependencies": {
     "@cross-logger/node": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   }
 }

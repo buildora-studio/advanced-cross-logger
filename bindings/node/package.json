@@ -2,6 +2,7 @@
   "name": "@cross-logger/node",
   "version": "0.1.0",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform"
