@@ -3,11 +3,26 @@
   "version": "0.1.0",
   "main": "index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "default": "./index.js"
+    }
+  },
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0"
+  },
+  "optionalDependencies": {
+    "@cross-logger/node-darwin-arm64": "0.1.0",
+    "@cross-logger/node-darwin-x64": "0.1.0",
+    "@cross-logger/node-linux-x64-gnu": "0.1.0",
+    "@cross-logger/node-linux-arm64-gnu": "0.1.0",
+    "@cross-logger/node-win32-x64-msvc": "0.1.0",
+    "@cross-logger/node-win32-arm64-msvc": "0.1.0"
   }
 }
