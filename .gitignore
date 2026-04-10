@@ -7,3 +7,10 @@ node_modules
 
 # napi-rs per-platform publish directories
 bindings/node/npm/
+
+# Python compiled extensions and virtualenvs
+*.so
+*.dylib
+*.dSYM
+.venv
+__pycache__
