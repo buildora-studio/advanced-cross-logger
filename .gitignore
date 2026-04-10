@@ -1,3 +1,9 @@
 /target
 
 node_modules
+
+# Compiled native addons
+*.node
+
+# napi-rs per-platform publish directories
+bindings/node/npm/
