@@ -6,7 +6,7 @@ public class CrossLogger {
     }
 
     static {
-        System.loadLibrary("cross_logger");
+        System.loadLibrary("cross_logger_jni");
     }
 
     public static native void logInfo(String message);

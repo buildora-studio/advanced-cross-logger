@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "cross_logger"
+name = "cross_logger_jni"
 crate-type = ["cdylib"]
 
 [dependencies]

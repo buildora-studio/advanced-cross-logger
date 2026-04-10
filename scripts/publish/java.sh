@@ -12,8 +12,8 @@ RESOURCES_DIR="$REPO_ROOT/bindings/java/src/main/resources"
 mkdir -p "$RESOURCES_DIR"
 
 for lib in \
-    "$REPO_ROOT/target/release/libcross_logger.dylib" \
-    "$REPO_ROOT/target/release/libcross_logger.so"; do
+    "$REPO_ROOT/target/release/libcross_logger_jni.dylib" \
+    "$REPO_ROOT/target/release/libcross_logger_jni.so"; do
     [[ -f "$lib" ]] && cp "$lib" "$RESOURCES_DIR/"
 done
 
