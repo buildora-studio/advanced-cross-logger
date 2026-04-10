@@ -6,15 +6,29 @@
 core/                        # Rust library — single source of truth for all log logic
 bindings/
   python/                    # pyo3 extension module (cdylib)
+    cross_logger/            # Python package — __init__.py re-exports native symbols
+    cross_logger.pc.in       # (not present — see Go)
   node/                      # napi-rs Node.js addon (cdylib)
+    index.js                 # CJS loader — resolves binary per platform
+    index.mjs                # ESM wrapper — named re-exports for ESM consumers
+    index.d.ts               # TypeScript declarations
   go/
     rust-go/                 # Rust cdylib + staticlib exposing C FFI
-    logger.go                # CGo wrapper (links against rust-go)
-    go.mod
+    logger.go                # CGo wrapper — uses pkg-config for library resolution
+    cross_logger.pc.in       # pkg-config template (generated .pc is gitignored)
   java/
-    rust-jni/                # Rust JNI implementation (cdylib)
+    rust-jni/                # Rust JNI implementation (cdylib → libcross_logger_jni)
     src/main/java/           # Java class with native methods
     pom.xml
+examples/
+  node/                      # TypeScript example (tsx, npm link)
+  python/                    # Python example (virtualenv + maturin develop)
+  go/                        # Go example (replace directive in go.mod)
+  java/                      # Java example (exec-maven-plugin, local mvn install)
+scripts/
+  build/                     # Per-language and all-at-once build scripts
+  publish/                   # Per-language publish scripts
+  run-example.sh             # Run one or all examples
 Cargo.toml                   # Workspace root (resolver = "3")
 ```
 
@@ -50,7 +64,7 @@ Run clippy before every PR. The CI treats warnings as errors on the Rust side.
 scripts/build/all.sh        # all bindings
 scripts/build/python.sh
 scripts/build/node.sh
-scripts/build/go.sh
+scripts/build/go.sh         # also generates bindings/go/cross_logger.pc
 scripts/build/java.sh
 ```
 
@@ -61,6 +75,16 @@ cargo build --release -p cross_logger_python
 cargo build --release -p cross_logger_node
 cargo build --release -p cross_logger_go
 cargo build --release -p cross_logger_java
+```
+
+## Running examples
+
+```bash
+scripts/run-example.sh all      # all examples
+scripts/run-example.sh node
+scripts/run-example.sh python
+scripts/run-example.sh go
+scripts/run-example.sh java
 ```
 
 ## Testing
@@ -78,8 +102,9 @@ cargo test
    cross_logger_core = { package = "core", path = "../../core" }
    ```
 4. Import as `cross_logger_core` in `src/lib.rs` (never `use core::...`).
-5. Implement the language-specific FFI layer delegating to `cross_logger_core::print_log`.
-6. Verify with `cargo clippy -p <crate_name>` before opening a PR.
+5. Give the compiled library a unique name in `[lib] name = "cross_logger_<lang>"` to avoid collisions in `target/release/`.
+6. Implement the language-specific FFI layer delegating to `cross_logger_core::print_log`.
+7. Verify with `cargo clippy -p <crate_name>` before opening a PR.
 
 ## Publishing
 
@@ -109,7 +134,7 @@ For multi-platform releases, build on each target OS/arch and publish platform-s
 
 ### Maven Central (Java)
 
-The script compiles the Rust native library, copies it into the JAR resources, and deploys to Maven Central via OSSRH. Requires GPG signing and OSSRH credentials in `~/.m2/settings.xml`, and the `pom.xml` must include `maven-gpg-plugin`, `maven-source-plugin`, and `maven-javadoc-plugin`.
+The script compiles the Rust native library (`libcross_logger_jni`), copies it into the JAR resources, and deploys to Maven Central via OSSRH. Requires GPG signing and OSSRH credentials in `~/.m2/settings.xml`, and the `pom.xml` must include `maven-gpg-plugin`, `maven-source-plugin`, and `maven-javadoc-plugin`.
 
 ```bash
 scripts/publish/java.sh
@@ -137,16 +162,20 @@ The tag prefix `go/` scopes it to the Go module at `bindings/go`. Before the fir
 - Uses `abi3-py39` feature for forward compatibility with Python versions newer than pyo3's supported maximum.
 - Build with `maturin`, not raw `cargo build` — the linker flags for `.so` extension modules require it.
 - Module init signature must use `Bound<'_, PyModule>` (pyo3 0.22+ API).
+- `cross_logger/__init__.py` must explicitly import from the native extension: `from .cross_logger import ...`.
 
 ### Node.js (`napi 2`)
 - Requires `napi-build` as a build dependency and a `build.rs` calling `napi_build::setup()`.
 - Build with `npm run build` inside `bindings/node/` (delegates to `@napi-rs/cli`).
+- `index.js` (CJS) + `index.mjs` (ESM wrapper) are both required: `module.exports = dynamicValue` prevents Node.js from statically detecting named exports, so ESM consumers need the explicit `.mjs` wrapper.
+- `package.json` `exports` field routes `import` → `index.mjs` and `require` → `index.js`.
 
 ### Go (C FFI)
 - Rust side exposes `pub unsafe extern "C"` functions — must be marked `unsafe` and include a `# Safety` doc comment.
-- Go side uses CGo; the `LDFLAGS` in `logger.go` point to `rust-go/target/release`.
-- Build the Rust static lib before running `go build`.
+- Library resolution uses `#cgo pkg-config: cross_logger`. `scripts/build/go.sh` generates `bindings/go/cross_logger.pc` from `cross_logger.pc.in` for local development. In production, install `cross_logger.pc` to a system prefix (e.g. `/usr/local/lib/pkgconfig/`).
+- `cross_logger.pc` is gitignored — never commit it.
 
 ### Java (JNI)
+- Native library is named `libcross_logger_jni` (not `libcross_logger`) to avoid collisions with the Go binding in `target/release/`.
 - JNI function names follow `Java_<package_underscored>_<Class>_<method>` — any rename of the Java class or package must be reflected in the Rust function names.
-- The `.dylib`/`.so` path must be passed via `-Djava.library.path` at runtime.
+- Pass `--enable-native-access=ALL-UNNAMED` at JVM startup to suppress JDK 17+ restricted-method warnings for `System.loadLibrary`.
