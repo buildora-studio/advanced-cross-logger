@@ -1,6 +1,5 @@
 use chrono::Utc;
 use serde_json::{json, Value};
-use std::sync::OnceLock;
 
 /// Severity levels for log entries, ordered from least to most critical.
 ///
@@ -204,47 +203,6 @@ fn obfuscate(value: &mut Value, keys: &[String], max_depth: usize, current_depth
         }
         _ => {}
     }
-}
-
-static GLOBAL_LOGGER: OnceLock<LoggerConfig> = OnceLock::new();
-
-/// Initializes the global singleton logger.
-///
-/// Must be called once at startup before any call to [`log`].
-/// Subsequent calls are silently ignored — the first config wins.
-///
-/// # Example
-///
-/// ```rust
-/// use core::{init, LoggerConfig, LogLevel};
-///
-/// init(
-///     LoggerConfig::new("my-app", LogLevel::Info)
-///         .with_cloud(true)
-///         .with_obfuscation(vec!["password"], 2)
-/// );
-/// ```
-pub fn init(config: LoggerConfig) {
-    let _ = GLOBAL_LOGGER.set(config);
-}
-
-/// Emits a log entry through the global singleton logger.
-///
-/// Panics if [`init`] has not been called first.
-///
-/// # Example
-///
-/// ```rust
-/// use core::{init, log, LoggerConfig, LogLevel};
-///
-/// init(LoggerConfig::new("my-app", LogLevel::Info));
-/// log(LogLevel::Info, "service started");
-/// ```
-pub fn log(level: LogLevel, message: &str) {
-    GLOBAL_LOGGER
-        .get()
-        .expect("logger not initialized — call init() first")
-        .log(level, message);
 }
 
 /// Emits a single log entry without a named logger instance.

@@ -2,26 +2,23 @@
 
 const { platform, arch } = process
 
-// Platform-specific optional packages published per target
 const PLATFORM_PACKAGES = {
-  'darwin-arm64':  '@cross-logger/node-darwin-arm64',
-  'darwin-x64':    '@cross-logger/node-darwin-x64',
-  'linux-x64':     '@cross-logger/node-linux-x64-gnu',
-  'linux-arm64':   '@cross-logger/node-linux-arm64-gnu',
-  'win32-x64':     '@cross-logger/node-win32-x64-msvc',
-  'win32-arm64':   '@cross-logger/node-win32-arm64-msvc',
+  'darwin-arm64': '@cross-logger/node-darwin-arm64',
+  'darwin-x64':   '@cross-logger/node-darwin-x64',
+  'linux-x64':    '@cross-logger/node-linux-x64-gnu',
+  'linux-arm64':  '@cross-logger/node-linux-arm64-gnu',
+  'win32-x64':    '@cross-logger/node-win32-x64-msvc',
+  'win32-arm64':  '@cross-logger/node-win32-arm64-msvc',
 }
 
 function load() {
   const key = `${platform}-${arch}`
   const pkg = PLATFORM_PACKAGES[key]
 
-  // Try the published platform package first
   if (pkg) {
     try { return require(pkg) } catch (_) {}
   }
 
-  // Fallback: local .node file built from source
   try { return require(`./index.${key}.node`) } catch (_) {}
 
   throw new Error(
@@ -30,4 +27,16 @@ function load() {
   )
 }
 
-module.exports = load()
+const native = load()
+
+const LogLevel = Object.freeze({
+  OFF:   -1,
+  SILLY:  0,
+  DEBUG:  1,
+  INFO:   2,
+  WARN:   3,
+  ERROR:  4,
+  FATAL:  5,
+})
+
+module.exports = { ...native, LogLevel }

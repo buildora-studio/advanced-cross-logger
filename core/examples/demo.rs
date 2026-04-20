@@ -1,4 +1,4 @@
-use core::{init, log, LoggerConfig, LogLevel};
+use core::{LoggerConfig, LogLevel};
 
 fn main() {
     println!("=== Solo required (name + minLevel) ===\n");
@@ -40,19 +40,4 @@ fn main() {
     logger.log(LogLevel::Warn,  "memory usage above 80%");
     logger.log(LogLevel::Error, "failed to connect to db");
 
-    println!("\n=== Singleton global ===\n");
-
-    init(
-        LoggerConfig::new("global", LogLevel::Info)
-            .with_cloud(true)
-            .with_obfuscation(vec!["password"], 2),
-    );
-
-    log(LogLevel::Info, "app booted");
-    log(LogLevel::Warn, r#"{"user":"alice","password":"s3cr3t"}"#);
-    log(LogLevel::Debug, "esto no se muestra (filtrado por minLevel)");
-
-    // segunda llamada a init es ignorada — el primero gana
-    init(LoggerConfig::new("ignored", LogLevel::Silly));
-    log(LogLevel::Info, "sigue usando 'global'");
 }
