@@ -7,3 +7,9 @@ members = [
     "bindings/go/rust-go",
     "bindings/java/rust-jni",
 ]
+default-members = [
+    "core",
+    "bindings/node",
+    "bindings/go/rust-go",
+    "bindings/java/rust-jni",
+]

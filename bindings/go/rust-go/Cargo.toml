@@ -5,7 +5,7 @@ edition = "2024"
 
 [lib]
 name = "cross_logger"
-crate-type = ["cdylib", "staticlib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 cross_logger_core = { package = "core", path = "../../../core" }

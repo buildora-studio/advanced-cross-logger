@@ -41,10 +41,7 @@ run_python() {
 run_go() {
     echo "=== Go ==="
 
-    # Generate cross_logger.pc if missing
-    if [[ ! -f "$REPO_ROOT/bindings/go/cross_logger.pc" ]]; then
-        bash "$REPO_ROOT/scripts/build/go.sh"
-    fi
+    bash "$REPO_ROOT/scripts/build/go.sh"
 
     cd "$REPO_ROOT/examples/go"
     PKG_CONFIG_PATH="$REPO_ROOT/bindings/go" go run main.go
