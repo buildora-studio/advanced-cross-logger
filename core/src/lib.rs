@@ -190,10 +190,16 @@ impl LoggerConfig {
             "logger": self.name,
             "message": msg_value,
         });
-        if self.is_cloud {
-            println!("{}", entry);
+        let formatted = if self.is_cloud {
+            entry.to_string()
         } else {
-            println!("{}", colorize_terminal(&serde_json::to_string_pretty(&entry).unwrap(), level));
+            colorize_terminal(&serde_json::to_string_pretty(&entry).unwrap(), level)
+        };
+
+        if level >= LogLevel::Warn {
+            eprintln!("{}", formatted);
+        } else {
+            println!("{}", formatted);
         }
     }
 }
