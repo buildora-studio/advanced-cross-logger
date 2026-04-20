@@ -16,6 +16,7 @@ usage() {
 
 run_node() {
     echo "=== Node.js ==="
+    bash "$REPO_ROOT/scripts/build/node.sh"
     cd "$REPO_ROOT/examples/node"
     npm start
 }
@@ -27,14 +28,12 @@ run_python() {
     if [[ ! -d ".venv" ]]; then
         echo "Creating virtualenv..."
         python3 -m venv .venv
-        cd "$REPO_ROOT/bindings/python"
-        source "$REPO_ROOT/examples/python/.venv/bin/activate"
-        maturin develop --skip-install 2>/dev/null || maturin develop
-        cd "$REPO_ROOT/examples/python"
-    else
-        source .venv/bin/activate
     fi
 
+    source "$REPO_ROOT/examples/python/.venv/bin/activate"
+    cd "$REPO_ROOT/bindings/python"
+    maturin develop --skip-install 2>/dev/null || maturin develop
+    cd "$REPO_ROOT/examples/python"
     python main.py
 }
 

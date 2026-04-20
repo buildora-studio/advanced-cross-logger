@@ -30,3 +30,15 @@
   - `scripts/run-example.sh` ahora siempre regenera el `.pc` desde el template
     `cross_logger.pc.in` antes de correr el ejemplo, eliminando la condición
     `if [[ ! -f ... ]]` que omitía la regeneración cuando el archivo ya existía.
+
+- **Go binding — caché de CGo no detectaba cambios en la librería Rust**
+  - Cuando se modificaba `core`, Go servía el binario cacheado ignorando el nuevo
+    `libcross_logger.a`. `scripts/build/go.sh` ahora ejecuta `go clean -cache` antes
+    de compilar para garantizar que el cambio se propague.
+
+- **Node y Python — ejemplos no recompilaban al cambiar `core`**
+  - `scripts/run-example.sh` no reconstruía los bindings de Node ni Python antes de
+    correr sus ejemplos, por lo que mostraban binarios desactualizados.
+  - `run_node` ahora llama a `scripts/build/node.sh` antes de `npm start`.
+  - `run_python` ahora siempre ejecuta `maturin develop` (antes solo lo hacía si el
+    `.venv` no existía).
