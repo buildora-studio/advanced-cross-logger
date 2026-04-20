@@ -1,10 +1,15 @@
 use core::{LoggerConfig, LogLevel};
 
 fn main() {
-    println!("=== Solo required (name + minLevel) ===\n");
+    println!("=== Todos los niveles (terminal) ===\n");
 
-    let logger = LoggerConfig::new("my-app", LogLevel::Debug);
-    logger.log(LogLevel::Info, "server ready on :8080");
+    let logger = LoggerConfig::new("my-app", LogLevel::Silly);
+    logger.log(LogLevel::Silly, "starting trace");
+    logger.log(LogLevel::Debug, "config loaded");
+    logger.log(LogLevel::Info,  "server ready on :8080");
+    logger.log(LogLevel::Warn,  "memory usage above 80%");
+    logger.log(LogLevel::Error, "failed to connect to db");
+    logger.log(LogLevel::Fatal, "unrecoverable panic");
 
     println!("\n=== Con is_cloud ===\n");
 

@@ -40,6 +40,18 @@ impl LogLevel {
             LogLevel::Fatal => "FATAL",
         }
     }
+
+    fn ansi_color(self) -> &'static str {
+        match self {
+            LogLevel::Off   => "",
+            LogLevel::Silly => "\x1b[90m",   // gray
+            LogLevel::Debug => "\x1b[32m",   // green
+            LogLevel::Info  => "\x1b[34m",   // blue
+            LogLevel::Warn  => "\x1b[33m",   // yellow
+            LogLevel::Error => "\x1b[31m",   // red
+            LogLevel::Fatal => "\x1b[35m",   // magenta
+        }
+    }
 }
 
 /// Configuration for a named logger instance.
@@ -178,8 +190,53 @@ impl LoggerConfig {
             "logger": self.name,
             "message": msg_value,
         });
-        println!("{}", entry);
+        if self.is_cloud {
+            println!("{}", entry);
+        } else {
+            println!("{}", colorize_terminal(&serde_json::to_string_pretty(&entry).unwrap(), level));
+        }
     }
+}
+
+/// Applies ANSI colors to a pretty-printed JSON log entry for terminal display.
+/// — JSON keys: dim
+/// — `severity` value: colored by log level
+fn colorize_terminal(pretty: &str, level: LogLevel) -> String {
+    const RESET: &str = "\x1b[0m";
+    const DIM: &str = "\x1b[2m";
+
+    let mut out = String::with_capacity(pretty.len() + 512);
+    for line in pretty.lines() {
+        let trimmed = line.trim_start();
+        let indent = &line[..line.len() - trimmed.len()];
+
+        if trimmed.starts_with('"') {
+            if let Some(sep) = trimmed.find("\": ") {
+                let key = &trimmed[1..sep];
+                let after = &trimmed[sep + 3..];
+                let (val, comma) = if after.ends_with(',') {
+                    (&after[..after.len() - 1], ",")
+                } else {
+                    (after, "")
+                };
+
+                let colored_val = if key == "severity" {
+                    format!("\"{}{}{}\"", level.ansi_color(), level.label(), RESET)
+                } else {
+                    val.to_string()
+                };
+
+                out.push_str(&format!(
+                    "{}{}\"{}\"{}:{} {}{}\n",
+                    indent, DIM, key, RESET, "", colored_val, comma
+                ));
+                continue;
+            }
+        }
+        out.push_str(line);
+        out.push('\n');
+    }
+    out.trim_end_matches('\n').to_string()
 }
 
 /// Recursively replaces values of matching keys with `"***"` up to `max_depth`.
