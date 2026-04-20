@@ -32,7 +32,7 @@ run_python() {
 
     source "$REPO_ROOT/examples/python/.venv/bin/activate"
     cd "$REPO_ROOT/bindings/python"
-    maturin develop --skip-install 2>/dev/null || maturin develop
+    maturin develop
     cd "$REPO_ROOT/examples/python"
     python main.py
 }
