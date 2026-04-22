@@ -1,7 +1,7 @@
 use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JObjectArray, JString};
 use jni::sys::{jboolean, jint, jlong};
-use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel};
+use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel, Uuid};
 
 fn to_level(value: jint) -> CoreLevel {
     match value {
@@ -55,11 +55,14 @@ pub extern "system" fn Java_com_crosslogger_LoggerConfig_nativeLog(
     _object: JObject,
     handle: jlong,
     level: jint,
+    id: JString,
     message: JString,
 ) {
     let config = unsafe { &*(handle as *const CoreConfig) };
+    let id_str: String = env.get_string(&id).unwrap().into();
     let msg: String = env.get_string(&message).unwrap().into();
-    config.log(to_level(level), &msg);
+    let uuid = Uuid::parse_str(&id_str).unwrap_or_default();
+    config.log(to_level(level), uuid, &msg);
 }
 
 /// Drops the CoreConfig behind the handle. Called from LoggerConfig.close().

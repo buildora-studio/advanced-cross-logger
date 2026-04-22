@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel};
+use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel, Uuid};
 
 fn to_level(value: i32) -> CoreLevel {
     match value {
@@ -48,8 +48,9 @@ impl LoggerConfig {
 
     /// Emits a log entry if level >= min_level.
     /// If message is a JSON string it is embedded as a nested object.
-    fn log(&self, level: i32, message: &str) {
-        self.inner.log(to_level(level), message);
+    fn log(&self, level: i32, id: &str, message: &str) {
+        let uuid = Uuid::parse_str(id).unwrap_or_default();
+        self.inner.log(to_level(level), uuid, message);
     }
 }
 

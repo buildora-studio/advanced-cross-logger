@@ -1,5 +1,5 @@
 use napi_derive::napi;
-use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel};
+use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel, Uuid};
 
 fn to_level(value: i32) -> CoreLevel {
     match value {
@@ -59,10 +59,12 @@ impl LoggerConfig {
     /// Emits a log entry if level >= minLevel.
     ///
     /// @param level - One of the LogLevel constants.
+    /// @param id - UUID string that identifies this log entry.
     /// @param message - Plain string or JSON string. JSON is embedded as a nested object.
     #[napi]
-    pub fn log(&self, level: i32, message: String) {
-        self.inner.log(to_level(level), &message);
+    pub fn log(&self, level: i32, id: String, message: String) {
+        let uuid = Uuid::parse_str(&id).unwrap_or_default();
+        self.inner.log(to_level(level), uuid, &message);
     }
 }
 

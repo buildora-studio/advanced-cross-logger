@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **`log()` now requires a UUID `id` parameter (breaking change — all bindings)**
+  - `LoggerConfig::log(level, message)` → `LoggerConfig::log(level, id, message)` across
+    core, Node, Go, Java, and Python.
+  - The `id` identifies the log entry and appears in every output line. Bindings accept it
+    as a string and parse it internally; invalid UUIDs fall back to the nil UUID.
+
+- **Log output format simplified to `LEVEL [name] [uuid] payload`**
+  - Replaced the JSON envelope (`{ timestamp, severity, logger, message }`) with a
+    plain single-line format: `INFO [my-app] [<uuid>] message text`.
+  - JSON message payloads are inlined as-is; string payloads are printed verbatim.
+  - Removed `chrono` from `core` — timestamps are no longer emitted by the library.
+  - Terminal colorization now only highlights the level label instead of the full
+    pretty-printed JSON block (`colorize_terminal_line` replaces `colorize_terminal`).
+
+- **`uuid` crate added to `core` dependencies**
+  - `core/Cargo.toml` now depends on `uuid = { version = "1", features = ["v4"] }`.
+  - `Uuid` is re-exported from `cross_logger_core` so bindings can use it directly.
+
 ### Fixed
 
 - **Python binding — build failure (linker undefined symbols)**

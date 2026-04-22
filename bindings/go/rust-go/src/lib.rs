@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
-use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel};
+use cross_logger_core::{LoggerConfig as CoreConfig, LogLevel as CoreLevel, Uuid};
 
 fn to_level(value: c_int) -> CoreLevel {
     match value {
@@ -49,16 +49,19 @@ pub unsafe extern "C" fn logger_config_create(
 ///
 /// # Safety
 /// - `handle` must be a valid pointer returned by `logger_config_create`.
-/// - `message` must be a valid non-null null-terminated C string.
+/// - `id` and `message` must be valid non-null null-terminated C strings.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn logger_config_log(
     handle: *mut CoreConfig,
     level: c_int,
+    id: *const c_char,
     message: *const c_char,
 ) {
     let config = unsafe { &*handle };
+    let id_str = unsafe { CStr::from_ptr(id).to_str().unwrap_or("") };
     let msg = unsafe { CStr::from_ptr(message).to_str().unwrap_or("") };
-    config.log(to_level(level), msg);
+    let uuid = Uuid::parse_str(id_str).unwrap_or_default();
+    config.log(to_level(level), uuid, msg);
 }
 
 /// Drops the CoreConfig behind the handle.

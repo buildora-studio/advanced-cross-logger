@@ -1,5 +1,5 @@
-use chrono::Utc;
-use serde_json::{json, Value};
+use serde_json::Value;
+pub use uuid::Uuid;
 
 /// Severity levels for log entries, ordered from least to most critical.
 ///
@@ -173,7 +173,7 @@ impl LoggerConfig {
     /// // JSON object — embedded as nested object in the output
     /// logger.log(LogLevel::Warn, r#"{"latency_ms":842,"route":"/checkout"}"#);
     /// ```
-    pub fn log(&self, level: LogLevel, message: &str) {
+    pub fn log(&self, level: LogLevel, id: Uuid, message: &str) {
         if self.min_level == LogLevel::Off || level < self.min_level {
             return;
         }
@@ -184,16 +184,15 @@ impl LoggerConfig {
             obfuscate(&mut msg_value, &self.obfuscate_keys, self.obfuscate_depth, 1);
         }
 
-        let entry = json!({
-            "timestamp": Utc::now().to_rfc3339(),
-            "severity": level.label(),
-            "logger": self.name,
-            "message": msg_value,
-        });
+        let payload = match &msg_value {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        };
+        let line = format!("{} [{}] [{}] {}", level.label(), self.name, id, payload);
         let formatted = if self.is_cloud {
-            entry.to_string()
+            line
         } else {
-            colorize_terminal(&serde_json::to_string_pretty(&entry).unwrap(), level)
+            colorize_terminal_line(&line, level)
         };
 
         if level >= LogLevel::Warn {
@@ -204,45 +203,15 @@ impl LoggerConfig {
     }
 }
 
-/// Applies ANSI colors to a pretty-printed JSON log entry for terminal display.
-/// — JSON keys: dim
-/// — `severity` value: colored by log level
-fn colorize_terminal(pretty: &str, level: LogLevel) -> String {
+/// Applies ANSI color to the level label in a `LEVEL [name] [uuid] payload` line.
+fn colorize_terminal_line(line: &str, level: LogLevel) -> String {
     const RESET: &str = "\x1b[0m";
-    const DIM: &str = "\x1b[2m";
-
-    let mut out = String::with_capacity(pretty.len() + 512);
-    for line in pretty.lines() {
-        let trimmed = line.trim_start();
-        let indent = &line[..line.len() - trimmed.len()];
-
-        if trimmed.starts_with('"') {
-            if let Some(sep) = trimmed.find("\": ") {
-                let key = &trimmed[1..sep];
-                let after = &trimmed[sep + 3..];
-                let (val, comma) = if after.ends_with(',') {
-                    (&after[..after.len() - 1], ",")
-                } else {
-                    (after, "")
-                };
-
-                let colored_val = if key == "severity" {
-                    format!("\"{}{}{}\"", level.ansi_color(), level.label(), RESET)
-                } else {
-                    val.to_string()
-                };
-
-                out.push_str(&format!(
-                    "{}{}\"{}\"{}:{} {}{}\n",
-                    indent, DIM, key, RESET, "", colored_val, comma
-                ));
-                continue;
-            }
-        }
-        out.push_str(line);
-        out.push('\n');
+    let label = level.label();
+    if let Some(rest) = line.strip_prefix(label) {
+        format!("{}{}{}{}", level.ansi_color(), label, RESET, rest)
+    } else {
+        line.to_string()
     }
-    out.trim_end_matches('\n').to_string()
 }
 
 /// Recursively replaces values of matching keys with `"***"` up to `max_depth`.
@@ -281,14 +250,12 @@ fn obfuscate(value: &mut Value, keys: &[String], max_depth: usize, current_depth
 /// print_log(LogLevel::Info, "app booted");
 /// print_log(LogLevel::Error, r#"{"exit_code":1,"reason":"missing config"}"#);
 /// ```
-pub fn print_log(level: LogLevel, message: &str) {
+pub fn print_log(level: LogLevel, id: Uuid, message: &str) {
     let msg_value: Value = serde_json::from_str(message)
         .unwrap_or_else(|_| Value::String(message.to_string()));
-
-    let entry = json!({
-        "timestamp": Utc::now().to_rfc3339(),
-        "severity": level.label(),
-        "message": msg_value,
-    });
-    println!("{}", entry);
+    let payload = match &msg_value {
+        Value::String(s) => s.clone(),
+        other => other.to_string(),
+    };
+    println!("{} [{}] {}", level.label(), id, payload);
 }

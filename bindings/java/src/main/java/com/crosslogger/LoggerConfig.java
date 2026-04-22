@@ -60,10 +60,11 @@ public class LoggerConfig implements AutoCloseable {
      * If {@code message} is a JSON string it is embedded as a nested object.
      *
      * @param level   one of the {@link LogLevel} constants
+     * @param id      UUID string that identifies this log entry
      * @param message plain string or JSON string
      */
-    public void log(int level, String message) {
-        nativeLog(nativeHandle, level, message);
+    public void log(int level, String id, String message) {
+        nativeLog(nativeHandle, level, id, message);
     }
 
     /** Releases native memory. Safe to call multiple times. */
@@ -73,6 +74,6 @@ public class LoggerConfig implements AutoCloseable {
     }
 
     private native long nativeCreate(String name, int minLevel, boolean isCloud, String[] obfuscateKeys, int obfuscateDepth);
-    private native void nativeLog(long handle, int level, String message);
+    private native void nativeLog(long handle, int level, String id, String message);
     private native void nativeDestroy(long handle);
 }

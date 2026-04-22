@@ -6,7 +6,7 @@ package crosslogger
 
 void* logger_config_create(const char* name, int min_level, int is_cloud,
     const char** obfuscate_keys, size_t obfuscate_keys_count, size_t obfuscate_depth);
-void  logger_config_log(void* handle, int level, const char* message);
+void  logger_config_log(void* handle, int level, const char* id, const char* message);
 void  logger_config_destroy(void* handle);
 */
 import "C"
@@ -88,11 +88,13 @@ func NewLoggerConfig(name string, minLevel int, opts ...Option) *LoggerConfig {
 }
 
 // Log emits a log entry if level >= minLevel.
-// If message is a JSON string it is embedded as a nested object in the output.
-func (l *LoggerConfig) Log(level int, message string) {
+// id must be a valid UUID string. If message is a JSON string it is embedded as a nested object.
+func (l *LoggerConfig) Log(level int, id string, message string) {
+	cID := C.CString(id)
+	defer C.free(unsafe.Pointer(cID))
 	cMsg := C.CString(message)
 	defer C.free(unsafe.Pointer(cMsg))
-	C.logger_config_log(l.handle, C.int(level), cMsg)
+	C.logger_config_log(l.handle, C.int(level), cID, cMsg)
 }
 
 // Close releases the native Rust LoggerConfig. Safe to call multiple times.
