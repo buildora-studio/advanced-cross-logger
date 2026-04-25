@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	crosslogger "cross-logger"
+	"github.com/google/uuid"
 )
 
 // Singleton pattern — cada desarrollador implementa el suyo.
@@ -18,17 +19,19 @@ func getLogger() *crosslogger.LoggerConfig {
 }
 
 func main() {
+	id := uuid.New().String()
+
 	// --- Uso básico (solo campos requeridos) ---
 
 	logger := crosslogger.NewLoggerConfig("my-app", crosslogger.LogLevelInfo)
 	defer logger.Close()
 
-	logger.Log(crosslogger.LogLevelSilly, "starting trace")
-	logger.Log(crosslogger.LogLevelDebug, "config loaded")
-	logger.Log(crosslogger.LogLevelInfo,  "server ready on :8080")
-	logger.Log(crosslogger.LogLevelWarn,  "memory usage above 80%")
-	logger.Log(crosslogger.LogLevelError, "failed to connect to db")
-	logger.Log(crosslogger.LogLevelFatal, "unrecoverable panic")
+	logger.Log(crosslogger.LogLevelSilly, id, "starting trace")
+	logger.Log(crosslogger.LogLevelDebug, id, "config loaded")
+	logger.Log(crosslogger.LogLevelInfo,  id, "server ready on :8080")
+	logger.Log(crosslogger.LogLevelWarn,  id, "memory usage above 80%")
+	logger.Log(crosslogger.LogLevelError, id, "failed to connect to db")
+	logger.Log(crosslogger.LogLevelFatal, id, "unrecoverable panic")
 
 	// --- Con WithCloud ---
 
@@ -36,7 +39,7 @@ func main() {
 		crosslogger.WithCloud(true),
 	)
 	defer cloud.Close()
-	cloud.Log(crosslogger.LogLevelInfo, "service started")
+	cloud.Log(crosslogger.LogLevelInfo, id, "service started")
 
 	// --- Con WithObfuscation ---
 
@@ -46,10 +49,10 @@ func main() {
 	defer secure.Close()
 
 	msg1, _ := json.Marshal(map[string]any{"user": "alice", "password": "s3cr3t"})
-	secure.Log(crosslogger.LogLevelInfo, string(msg1))
+	secure.Log(crosslogger.LogLevelInfo, id, string(msg1))
 
 	msg2, _ := json.Marshal(map[string]any{"session": map[string]any{"token": "abc123", "expires": 3600}})
-	secure.Log(crosslogger.LogLevelWarn, string(msg2))
+	secure.Log(crosslogger.LogLevelWarn, id, string(msg2))
 
 	// --- Con todo ---
 
@@ -59,18 +62,18 @@ func main() {
 	)
 	defer full.Close()
 
-	full.Log(crosslogger.LogLevelDebug, "esto no se muestra (filtrado por minLevel)")
+	full.Log(crosslogger.LogLevelDebug, id, "esto no se muestra (filtrado por minLevel)")
 
 	msg3, _ := json.Marshal(map[string]any{"user": "bob", "password": "hunter2"})
-	full.Log(crosslogger.LogLevelWarn, string(msg3))
+	full.Log(crosslogger.LogLevelWarn, id, string(msg3))
 
 	msg4, _ := json.Marshal(map[string]any{"code": 500, "reason": "upstream timeout"})
-	full.Log(crosslogger.LogLevelError, string(msg4))
+	full.Log(crosslogger.LogLevelError, id, string(msg4))
 
 	// --- Singleton ---
 
-	getLogger().Log(crosslogger.LogLevelInfo, "app booted via singleton")
+	getLogger().Log(crosslogger.LogLevelInfo, id, "app booted via singleton")
 
 	msg5, _ := json.Marshal(map[string]any{"error": "disk full", "password": "leaked?"})
-	getLogger().Log(crosslogger.LogLevelError, string(msg5))
+	getLogger().Log(crosslogger.LogLevelError, id, string(msg5))
 }

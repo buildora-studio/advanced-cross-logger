@@ -62,3 +62,21 @@
   - `run_node` ahora llama a `scripts/build/node.sh` antes de `npm start`.
   - `run_python` ahora siempre ejecuta `maturin develop` (antes solo lo hacía si el
     `.venv` no existía).
+
+- **Ejemplos Python, Go y Java — firma de `log()` desactualizada**
+  - Los tres ejemplos seguían llamando a `log(level, message)` tras el breaking change
+    que agregó el parámetro `id`.
+  - `examples/python/main.py`: agrega `import uuid` y pasa `str(uuid.uuid4())` como `id`.
+  - `examples/go/main.go`: agrega dependencia `github.com/google/uuid` y pasa
+    `uuid.New().String()` como `id`.
+  - `examples/java/Main.java`: usa `UUID.randomUUID().toString()` y pasa `id` en cada
+    llamada a `.log()`.
+
+- **`run-example.sh` — `maturin` no encontrado en builds limpias**
+  - El script activaba el venv pero asumía que `maturin` ya estaba instalado globalmente.
+  - `run_python` ahora ejecuta `pip install --quiet maturin` dentro del venv antes de
+    llamar a `maturin develop`, haciendo el setup autocontenido.
+
+- **Go example — dependencia `pkg-config` faltante**
+  - La build de Go requiere `pkg-config` para resolver `cross_logger.pc`; en macOS
+    se instala con `brew install pkg-config`.

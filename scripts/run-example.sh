@@ -31,6 +31,7 @@ run_python() {
     fi
 
     source "$REPO_ROOT/examples/python/.venv/bin/activate"
+    pip install --quiet maturin
     cd "$REPO_ROOT/bindings/python"
     maturin develop
     cd "$REPO_ROOT/examples/python"

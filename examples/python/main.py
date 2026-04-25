@@ -1,21 +1,24 @@
 import json
+import uuid
 from cross_logger import LoggerConfig, LogLevel
+
+id = str(uuid.uuid4())
 
 # --- Uso básico (solo campos requeridos) ---
 
 logger = LoggerConfig("my-app", LogLevel.INFO)
 
-logger.log(LogLevel.SILLY, "starting trace")
-logger.log(LogLevel.DEBUG, "config loaded")
-logger.log(LogLevel.INFO,  "server ready on :8080")
-logger.log(LogLevel.WARN,  "memory usage above 80%")
-logger.log(LogLevel.ERROR, "failed to connect to db")
-logger.log(LogLevel.FATAL, "unrecoverable panic")
+logger.log(LogLevel.SILLY, id, "starting trace")
+logger.log(LogLevel.DEBUG, id, "config loaded")
+logger.log(LogLevel.INFO,  id, "server ready on :8080")
+logger.log(LogLevel.WARN,  id, "memory usage above 80%")
+logger.log(LogLevel.ERROR, id, "failed to connect to db")
+logger.log(LogLevel.FATAL, id, "unrecoverable panic")
 
 # --- Con is_cloud ---
 
 cloud_logger = LoggerConfig("payments", LogLevel.INFO, is_cloud=True)
-cloud_logger.log(LogLevel.INFO, "service started")
+cloud_logger.log(LogLevel.INFO, id, "service started")
 
 # --- Con obfuscation ---
 
@@ -26,8 +29,8 @@ secure_logger = LoggerConfig(
     obfuscate_depth=2,
 )
 
-secure_logger.log(LogLevel.INFO, json.dumps({"user": "alice", "password": "s3cr3t"}))
-secure_logger.log(LogLevel.WARN, json.dumps({"session": {"token": "abc123", "expires": 3600}}))
+secure_logger.log(LogLevel.INFO, id, json.dumps({"user": "alice", "password": "s3cr3t"}))
+secure_logger.log(LogLevel.WARN, id, json.dumps({"session": {"token": "abc123", "expires": 3600}}))
 
 # --- Con todo ---
 
@@ -39,9 +42,9 @@ full_logger = LoggerConfig(
     obfuscate_depth=2,
 )
 
-full_logger.log(LogLevel.DEBUG, "esto no se muestra (filtrado por min_level)")
-full_logger.log(LogLevel.WARN,  json.dumps({"user": "bob", "password": "hunter2"}))
-full_logger.log(LogLevel.ERROR, json.dumps({"code": 500, "reason": "upstream timeout"}))
+full_logger.log(LogLevel.DEBUG, id, "esto no se muestra (filtrado por min_level)")
+full_logger.log(LogLevel.WARN,  id, json.dumps({"user": "bob", "password": "hunter2"}))
+full_logger.log(LogLevel.ERROR, id, json.dumps({"code": 500, "reason": "upstream timeout"}))
 
 # --- Singleton (patrón sugerido por binding) ---
 
@@ -58,5 +61,5 @@ def get_logger() -> LoggerConfig:
         )
     return _instance
 
-get_logger().log(LogLevel.INFO, "app booted via singleton")
-get_logger().log(LogLevel.ERROR, json.dumps({"error": "disk full", "password": "leaked?"}))
+get_logger().log(LogLevel.INFO, id, "app booted via singleton")
+get_logger().log(LogLevel.ERROR, id, json.dumps({"error": "disk full", "password": "leaked?"}))
